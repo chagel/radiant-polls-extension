@@ -13,7 +13,7 @@ module PollTags
     def page_link(page, text, attributes = {})
       attributes = tag_options(attributes)
       @paginate_url_route = @paginate_url_route.blank? ? PollsExtension::UrlCache : @paginate_url_route
-      %Q{<a href="#{@tag.locals.page.url}#{@paginate_url_route}#{page}"#{attributes}>#{text}</a>}
+      %Q{<a href="#{@tag.locals.page.url}#{@paginate_url_route}?page=#{page}"#{attributes}>#{text}</a>}
     end
     
     def gap_marker
@@ -86,6 +86,17 @@ module PollTags
   end
 
   desc %{
+    Shows the poll description.
+
+    *Usage:*
+    <pre><code><r:poll [description="Long descriptoin about poll goes here."]>
+    <r:description /></r:poll></code></pre>
+  }
+  tag 'poll:description' do |tag|
+    tag.locals.poll.description
+  end
+
+  desc %{
     Renders a poll survey form.
 
     *Usage:*
@@ -95,8 +106,9 @@ module PollTags
     options = tag.attr.dup
     tag.locals.poll = find_poll(tag, options)
     poll = tag.locals.poll
+    
     result = %Q{
-      <form action="/pages/#{tag.locals.page.id}/poll_response" method="post" id="poll_form">
+      <form action="/pages/#{tag.locals.page.id}/poll_response" method="post" id="poll_form" target="_blank">
         <div>
           #{tag.expand}
           <input type="hidden" name="poll_id" value="#{tag.locals.poll.id}" />
@@ -151,7 +163,12 @@ module PollTags
   }
   tag 'poll:options:input' do |tag|
     option = tag.locals.option
-    %{<input type="radio" name="response_id" value="#{option.id}" />}
+    poll = tag.locals.poll
+    if poll.choice_type == "MultipleChoicesPoll"
+      %{<input type="checkbox" name="response_id[]" value="#{option.id}" />}
+    else
+      %{<input type="radio" name="response_id" value="#{option.id}" />}
+    end
   end
 
   desc %{
@@ -172,7 +189,8 @@ module PollTags
   }
   tag 'poll:submit' do |tag|
     value = tag.attr['value'] || 'Submit'
-    %{<input type="submit" name="poll[submit]" value="#{value}" />}
+    style = tag.attr['class']
+    %{<input type="submit" name="poll[submit]" class="#{style}" value="#{value}" />}
   end
 
   desc %{
@@ -308,7 +326,7 @@ module PollTags
   def find_options(tag)
     options = {}
 
-    options[:page] = tag.attr['page'] || @request.path[/^#{Regexp.quote(tag.locals.page.url)}#{Regexp.quote(PollsExtension::UrlCache)}(\d+)\/?$/, 1]
+    options[:page] = tag.attr['page'] || params["page"]#@request.path[/^#{Regexp.quote(tag.locals.page.url)}#{Regexp.quote(PollsExtension::UrlCache)}(\d+)\/?$/, 1]
     options[:per_page] = (tag.attr['per_page'] || 10).to_i
     raise TagError.new('the per_page attribute of the polls tag must be a positive integer') unless options[:per_page] > 0
     by = tag.attr['by'] || 'title'

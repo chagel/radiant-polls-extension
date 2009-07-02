@@ -1,7 +1,7 @@
 class Poll < ActiveRecord::Base
   has_many :options
   after_update :save_options
-  validates_presence_of :title
+  validates_presence_of :title, :choice_type
   validates_uniqueness_of :title, :allow_nil => true
   validates_uniqueness_of :start_date, :allow_nil => true
   validates_associated :options
@@ -28,11 +28,9 @@ class Poll < ActiveRecord::Base
   end
 
   # submit a response to the poll and update
-  # the response counts for the poll and the option
-  def submit_response(option)
-    option.update_attribute(:response_count, option.response_count + 1) 
-    self.update_attribute(:response_count, self.response_count + 1)
-
+  # the response counts for the poll
+  def submit_response
+    self.increment!(:response_count, 1)
     return true
   end
 
@@ -61,4 +59,11 @@ class Poll < ActiveRecord::Base
     self.response_count = 0
   end
 
+end
+
+class SingleChoicePoll < Poll
+
+end
+
+class MultipleChoicesPoll < Poll
 end

@@ -11,6 +11,13 @@
         <%= f.text_field :start_date, :size => 15 %>
       </p>
       <p class="title">
+        <label>Choose poll type:</label>
+        <%= f.radio_button "choice_type", "SingleChoicePoll" %>Single choice
+        <%= f.radio_button "choice_type", "MultipleChoicesPoll" %>Multiple choices
+      </p>
+      <p class="title">
+        <label for="poll_description" id="description-title">Description</label>
+        <%= f.text_area :description, :rows => 10, :cols => 60 %>
         <label for="poll_options" id="options-title">Options</label>
         <div id="options">
           <%- if first_new_form -%>

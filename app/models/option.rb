@@ -14,6 +14,10 @@ class Option < ActiveRecord::Base
     should_destroy.to_i == 1
   end
 
+  def submit_response
+    self.increment!(:response_count, 1)
+  end
+
   private
 
   def set_defaults
